@@ -39,7 +39,7 @@ __global__ void sobel_shared( unsigned char * g, unsigned char * s, std::size_t 
         int h, v, res;
         // GREY = ( 307 * R + 604 * G + 113 * B ) / 1024
 
-        if( lId_x > 0 && lId_x <= outputBlockDim_x && lId_y > 0 && lId_y <= outputBlockDim_y) {
+        if( lId_x > 0 && lId_x <= outputBlockDim_x && lId_y > 0 && lId_y <= outputBlockDim_y && gId_y < (rows-1) && gId_x < (cols-1)) {
         // Horizontal
             h =     shared_g[ ((lId_y - 1) * blockDim.x + lId_x - 1) ] -     shared_g[ ((lId_y - 1) * blockDim.x + lId_x + 1) ]
                 + 2 * shared_g[ ( lId_y      * blockDim.x + lId_x - 1) ] - 2 * shared_g[ ( lId_y      * blockDim.x + lId_x + 1) ]
