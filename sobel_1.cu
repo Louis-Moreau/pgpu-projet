@@ -48,7 +48,7 @@ void print_if_err(cudaError_t erreur);
 
 int main()
 {
-  cv::Mat m_in = cv::imread("in.jpg", cv::IMREAD_UNCHANGED );
+  cv::Mat m_in = cv::imread("./images/input/in.jpg", cv::IMREAD_UNCHANGED );
 
   auto rgb = m_in.data;
   auto rows = m_in.rows;
@@ -114,7 +114,7 @@ int main()
   print_if_err(erreur_kernel);
   
 
-  cv::imwrite( "out-cu.jpg", m_out );
+  cv::imwrite( "./images/output/out-cu.jpg", m_out );
 
   cudaFree( rgb_d );
   cudaFree( g_d );

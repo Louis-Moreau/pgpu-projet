@@ -63,7 +63,7 @@ int main()
   }
   
 
-  cv::imwrite( "out_cpp.jpg", m_out );
+  cv::imwrite( "./images/output/out_cpp.jpg", m_out );
 
   // Get ending timepoint
   auto stop = std::chrono::high_resolution_clock::now();

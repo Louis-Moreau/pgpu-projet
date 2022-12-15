@@ -151,7 +151,7 @@ int main()
 
   
   
-  cv::imwrite( "./images/output/out4-cu.jpg", m_out );
+  cv::imwrite( "./out4-cu.jpg", m_out );
 
 
   for (int i = 0; i < batch;i++) {

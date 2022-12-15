@@ -64,7 +64,7 @@ void print_if_err(cudaError_t erreur);
 
 int main()
 {
-  cv::Mat m_in = cv::imread("in2.jpg", cv::IMREAD_UNCHANGED );
+  cv::Mat m_in = cv::imread("./images/input/in2.jpg", cv::IMREAD_UNCHANGED );
 
   auto rows = m_in.rows;
   auto cols = m_in.cols;
@@ -133,7 +133,7 @@ int main()
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
 
-  cv::imwrite( "out4bis-cu.jpg", m_out );
+  cv::imwrite( "./images/output/out4bis-cu.jpg", m_out );
 
   for (int i = 0; i < batch;i++) {
     cudaStreamDestroy( streams[ i ] );
