@@ -4,9 +4,20 @@
 #include <chrono>
 
 
-int main()
+int main(int argc, char** argv)
 {
-  cv::Mat m_in = cv::imread("in2.jpg", cv::IMREAD_UNCHANGED );
+  if(argc != 3){
+    std::cout << "Error argument number" << std::endl << "Usage : <image_in> <image_out>, please verify that <image_in> is jpg and is in ./image/input/" << std::endl;
+    exit(1);
+  }
+
+  std::string path_in = argv[1];
+  path_in = "./images/input/" + path_in;
+
+  std::string path_out = argv[2];
+  path_out = "./images/output/" + path_out;
+
+  cv::Mat m_in = cv::imread(path_in, cv::IMREAD_UNCHANGED );
 
   auto rgb = m_in.data;
   auto rows = m_in.rows;
@@ -63,7 +74,7 @@ int main()
   }
   
 
-  cv::imwrite( "./images/output/out_cpp.jpg", m_out );
+  cv::imwrite( path_out, m_out );
 
   // Get ending timepoint
   auto stop = std::chrono::high_resolution_clock::now();

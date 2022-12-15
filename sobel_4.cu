@@ -73,9 +73,30 @@ __global__ void grayscale_sobel_shared( unsigned char * rgb, unsigned char * s, 
 
 void print_if_err(cudaError_t erreur);
 
-int main()
+int main(int argc, char** argv)
 {
-   cv::Mat m_in = cv::imread("./images/input/in2.jpg", cv::IMREAD_UNCHANGED );
+
+  if(argc != 6){
+    std::cout << "Error argument number" << std::endl << "Usage : <image_in> <image_out> <blockDim.x> <blockDim.y> <streamNb>, please verify that <image_in> is jpg and is in ./image/input/" << std::endl;
+    exit(1);
+  }
+  
+  const int blockSizeX = atoi(argv[3]);
+  const int blockSizeY = atoi(argv[4]);
+  const int batchIn = atoi(argv[5]);
+
+  if( (blockSizeX * blockSizeY) > 1024 ){
+    std::cout << "Error block dimension" << std::endl << "<blockDim.x> * <blockDim.y> must be lower or equal to 1024. And both must be positive" << std::endl;
+    exit(1);
+  }
+
+  std::string path_in = argv[1];
+  path_in = "./images/input/" + path_in;
+
+  std::string path_out = argv[2];
+  path_out = "./images/output/" + path_out;
+
+   cv::Mat m_in = cv::imread( path_in, cv::IMREAD_UNCHANGED );
 
   auto rows = m_in.rows;
   auto cols = m_in.cols;
@@ -85,11 +106,12 @@ int main()
   unsigned char * rgb_d;
   unsigned char * s_d;
 
-  const int batch = 7;
-  int outChunkSize = (rows-1)/batch +1;
+  //const int batch = 7;
+  int outChunkSize = (rows-1)/batchIn +1;
   int inChunkSize = outChunkSize + 2;
 
-  cudaStream_t streams[batch];
+  //cudaStream_t streams[batch];
+  cudaStream_t streams[batchIn];
 
   cudaMallocHost( &rgb, 3 * rows * cols * sizeof(char));
   cudaMallocHost( &s, rows * cols * sizeof(char));
@@ -109,27 +131,27 @@ int main()
   auto memCpyHtDOffset = 0;
   auto memCpyDtHOffset = 1;
 
-  dim3 t_s( 32, 32 );
+  dim3 t_s( blockSizeX, blockSizeY );
   dim3 b_s( ( cols - 1) / (t_s.x-2) +1 , (inChunkSize -1) / (t_s.y-2) +1 );
 
-  for (int i = 0; i < batch;i++) {
+  for (int i = 0; i < batchIn;i++) {
     cudaStreamCreate( &streams[ i ] );
   }
 
   cudaMemcpyAsync(rgb_d + memCpyHtDOffset * cols * 3, rgb + memCpyHtDOffset * cols * 3,  3 * std::min(inChunkSize, rows - memCpyHtDOffset) * cols, cudaMemcpyHostToDevice, streams[0]);
   memCpyHtDOffset += inChunkSize;
   //the two lines above are slightly different than the one in the for loop to avoid unnecessary memory copy
-  for (int i = 1; i < batch;i++) {
+  for (int i = 1; i < batchIn;i++) {
     cudaMemcpyAsync(rgb_d + memCpyHtDOffset * cols * 3, rgb + memCpyHtDOffset * cols * 3,  3 * std::min(outChunkSize, rows - memCpyHtDOffset) * cols, cudaMemcpyHostToDevice, streams[i]);
     memCpyHtDOffset += outChunkSize;
   }
 
-  for (int i = 0; i < batch; i++) {
+  for (int i = 0; i < batchIn; i++) {
     grayscale_sobel_shared<<< b_s, t_s, (t_s.x)*(t_s.y)*sizeof(int),streams[i]>>>(rgb_d, s_d, cols, std::min(inChunkSize, rows - kernelOffset),kernelOffset);
     kernelOffset += outChunkSize;
   }
 
-  for (int i = 0; i < batch;i++) {
+  for (int i = 0; i < batchIn;i++) {
     cudaMemcpyAsync( s + memCpyDtHOffset * cols, s_d + memCpyDtHOffset * cols , std::min(outChunkSize, rows - memCpyDtHOffset) * cols, cudaMemcpyDeviceToHost, streams[i] );
     memCpyDtHOffset += outChunkSize;
   }
@@ -151,10 +173,10 @@ int main()
 
   
   
-  cv::imwrite( "./out4-cu.jpg", m_out );
+  cv::imwrite( path_out, m_out );
 
 
-  for (int i = 0; i < batch;i++) {
+  for (int i = 0; i < batchIn;i++) {
     cudaStreamDestroy( streams[ i ] );
   }
 

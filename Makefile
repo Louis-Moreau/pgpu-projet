@@ -1,10 +1,12 @@
 CXX=g++
-CXXFLAGS=-O3 -march=native -I /usr/local/include/opencv4/ -lopencv_core -lopencv_videoio -lopencv_highgui
-GXXFLAGS=-O3 -I /usr/local/include/opencv4/ -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
+#CXXFLAGS=-O3 -march=native -I /usr/local/include/opencv4/ -lopencv_core -lopencv_videoio -lopencv_highgui
+#GXXFLAGS=-O3 -I /usr/local/include/opencv4/ -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
+CXXFLAGS=-O3 -march=native -I /opt/opencv/include/opencv4/ -lopencv_core -lopencv_videoio -lopencv_highgui
+GXXFLAGS=-O3 -I /opt/opencv/include/opencv4/ -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
 LDLIBS=`pkg-config --libs opencv4`
 BIN=./bin/
 
-all: sobel sobel-cu sobel2-cu sobel3-cu
+all: sobel sobel1-cu sobel2-cu sobel3-cu sobel4-cu sobel4bis-cu
 
 sobel: sobel.cpp
 	$(CXX) $(CXXFLAGS) -o $(BIN)$@ $< $(LDLIBS)
@@ -27,6 +29,5 @@ sobel4bis-cu: sobel_4bis.cu
 .PHONY: clean
 
 clean:
-	rm out*
-	rm sobel
-	rm sobel*-cu
+	rm ./bin/*
+	rm ./images/output/*

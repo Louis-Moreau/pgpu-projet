@@ -46,9 +46,30 @@ __global__ void sobel( unsigned char * g, unsigned char * s, std::size_t cols, s
 
 void print_if_err(cudaError_t erreur);
 
-int main()
+int main(int argc, char** argv)
 {
-  cv::Mat m_in = cv::imread("./images/input/in.jpg", cv::IMREAD_UNCHANGED );
+
+
+  if(argc != 5){
+    std::cout << "Error argument number" << std::endl << "Usage : <image_in> <image_out> <blockDim.x> <blockDim.y>, please verify that <image_in> is jpg and is in ./image/input/" << std::endl;
+    exit(1);
+  }
+  
+  const int blockSizeX = atoi(argv[3]);
+  const int blockSizeY = atoi(argv[4]);
+
+  if( (blockSizeX * blockSizeY) > 1024 ){
+    std::cout << "Error block dimension" << std::endl << "<blockDim.x> * <blockDim.y> must be lower or equal to 1024. And both must be positive" << std::endl;
+    exit(1);
+  }
+
+  std::string path_in = argv[1];
+  path_in = "./images/input/" + path_in;
+
+  std::string path_out = argv[2];
+  path_out = "./images/output/" + path_out;
+
+  cv::Mat m_in = cv::imread(path_in, cv::IMREAD_UNCHANGED );
 
   auto rgb = m_in.data;
   auto rows = m_in.rows;
@@ -75,7 +96,7 @@ int main()
 
   cudaMemcpy( rgb_d, rgb, 3 * rows * cols, cudaMemcpyHostToDevice );
 
-  dim3 t( 32, 32 );
+  dim3 t( blockSizeX, blockSizeY );
   dim3 b( ( cols - 1) / t.x + 1 , ( rows - 1 ) / t.y + 1 );
   
   cudaEventCreate(&startK);
@@ -114,7 +135,7 @@ int main()
   print_if_err(erreur_kernel);
   
 
-  cv::imwrite( "./images/output/out-cu.jpg", m_out );
+  cv::imwrite( path_out, m_out );
 
   cudaFree( rgb_d );
   cudaFree( g_d );
