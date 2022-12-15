@@ -138,11 +138,8 @@ int main(int argc, char** argv)
     cudaStreamCreate( &streams[ i ] );
   }
 
-  cudaMemcpyAsync(rgb_d + memCpyHtDOffset * cols * 3, rgb + memCpyHtDOffset * cols * 3,  3 * std::min(inChunkSize, rows - memCpyHtDOffset) * cols, cudaMemcpyHostToDevice, streams[0]);
-  memCpyHtDOffset += inChunkSize;
-  //the two lines above are slightly different than the one in the for loop to avoid unnecessary memory copy
-  for (int i = 1; i < batchIn;i++) {
-    cudaMemcpyAsync(rgb_d + memCpyHtDOffset * cols * 3, rgb + memCpyHtDOffset * cols * 3,  3 * std::min(outChunkSize, rows - memCpyHtDOffset) * cols, cudaMemcpyHostToDevice, streams[i]);
+  for (int i = 0; i < batchIn;i++) {
+    cudaMemcpyAsync(rgb_d + memCpyHtDOffset * cols * 3, rgb + memCpyHtDOffset * cols * 3,  3 * std::min(inChunkSize, rows - memCpyHtDOffset) * cols, cudaMemcpyHostToDevice, streams[i]);
     memCpyHtDOffset += outChunkSize;
   }
 

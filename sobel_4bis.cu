@@ -118,22 +118,13 @@ int main(int argc, char** argv)
   auto kernelOffset = 0;
   auto memCpyHtDOffset = 0;
   auto memCpyDtHOffset = 1;
-
   dim3 t_s( blockSizeX, blockSizeY );
   dim3 b_s( ( cols - 1) / (t_s.x-2) +1 , (inChunkSize -1) / (t_s.y-2) +1 );
-  cudaStreamCreate(&streams[0]);
-  cudaMemcpyAsync(rgb_d + memCpyHtDOffset * cols * 3, rgb + memCpyHtDOffset * cols * 3,  3 * std::min(inChunkSize, rows - memCpyHtDOffset) * cols, cudaMemcpyHostToDevice, streams[0]); // this changes between here and for loop
-  grayscale_sobel_shared<<< b_s, t_s, (t_s.x)*(t_s.y)*sizeof(int),streams[0]>>>(rgb_d, s_d, cols, std::min(inChunkSize, rows - kernelOffset),kernelOffset);
-  cudaMemcpyAsync( s + memCpyDtHOffset * cols, s_d + memCpyDtHOffset * cols , std::min(outChunkSize, rows - memCpyDtHOffset) * cols, cudaMemcpyDeviceToHost, streams[0] );
 
-  memCpyHtDOffset += inChunkSize; // this changes between here and for loop
-  kernelOffset += outChunkSize;
-  memCpyDtHOffset += outChunkSize;
-
-  for (int i = 1; i < batchIn;i++) {
+  for (int i = 0; i < batchIn;i++) {
     std::cout << " y : " << kernelOffset << " - "<< std::min(inChunkSize, rows - kernelOffset) << std::endl;
     cudaStreamCreate( &streams[ i ]);
-    cudaMemcpyAsync(rgb_d + memCpyHtDOffset * cols * 3, rgb + memCpyHtDOffset * cols * 3,  3 * std::min(outChunkSize, rows - memCpyHtDOffset) * cols, cudaMemcpyHostToDevice, streams[i]);
+    cudaMemcpyAsync(rgb_d + memCpyHtDOffset * cols * 3, rgb + memCpyHtDOffset * cols * 3,  3 * std::min(inChunkSize, rows - memCpyHtDOffset) * cols, cudaMemcpyHostToDevice, streams[i]);
     grayscale_sobel_shared<<< b_s, t_s, (t_s.x)*(t_s.y)*sizeof(int),streams[i]>>>(rgb_d, s_d, cols, std::min(inChunkSize, rows - kernelOffset),kernelOffset);
     cudaMemcpyAsync( s + memCpyDtHOffset * cols, s_d + memCpyDtHOffset * cols , std::min(outChunkSize, rows - memCpyDtHOffset) * cols, cudaMemcpyDeviceToHost, streams[i] );
 
